@@ -1,0 +1,28 @@
+{
+  "name": "url-shortener",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @shorturl/api",
+    "dev:web": "npm run dev -w @shorturl/web",
+    "dev:api": "npm run dev -w @shorturl/api",
+    "db:up": "docker compose up -d postgres redis",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres redis",
+    "build": "npm run build -ws",
+    "lint": "npm run lint -ws",
+    "typecheck": "npm run typecheck -ws",
+    "prisma:migrate": "npm run prisma:migrate -w @shorturl/api",
+    "prisma:seed": "npm run prisma:seed -w @shorturl/api"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "eslint": "^9.25.1",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  }
+}

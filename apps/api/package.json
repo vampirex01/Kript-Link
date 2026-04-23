@@ -1,0 +1,51 @@
+{
+  "name": "@shorturl/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "lint": "echo \"No lint configured for api\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:seed": "prisma db seed",
+    "worker": "tsx src/workers/clickWorker.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^10.0.1",
+    "@fastify/cors": "^10.1.0",
+    "@fastify/jwt": "^9.1.0",
+    "@fastify/multipart": "^9.0.3",
+    "@fastify/rate-limit": "^10.3.0",
+    "@prisma/client": "^6.6.0",
+    "bcrypt": "^5.1.1",
+    "bullmq": "^5.49.1",
+    "csv-stringify": "^6.5.2",
+    "fastify": "^5.2.1",
+    "ioredis": "^5.6.1",
+    "jsonwebtoken": "^9.0.2",
+    "nanoid": "^5.1.5",
+    "node-cron": "^4.0.7",
+    "pino": "^9.7.0",
+    "prisma": "^6.6.0",
+    "qrcode": "^1.5.4",
+    "ua-parser-js": "^2.0.3",
+    "validator": "^13.12.0",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.15.3",
+    "@types/qrcode": "^1.5.6",
+    "@types/validator": "^13.15.10",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}
