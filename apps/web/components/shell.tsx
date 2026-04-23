@@ -21,10 +21,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-6 sm:px-6 lg:px-8">
-      <header className="mb-6 rounded-2xl border border-ink/10 bg-white/80 p-4 backdrop-blur">
+      <header className="cyber-card mb-6 rounded-2xl p-4 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link href="/dashboard" className="font-display text-2xl text-ink">
-            ShortURL
+            Krypt Link
           </Link>
           <nav className="flex items-center gap-2">
             {navItems.map((item) => (
@@ -32,10 +32,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={clsx(
-                  "rounded-lg px-3 py-2 text-sm font-semibold transition",
+                  "rounded-lg px-3 py-2 text-sm font-semibold transition duration-200",
                   pathname === item.href
-                    ? "bg-ink text-white"
-                    : "text-ink/70 hover:bg-ink/10",
+                    ? "bg-ink shadow-[0_0_24px_rgba(0,245,255,0.24)]"
+                    : "text-ink/70 hover:bg-ember/10 hover:text-ember",
                 )}
               >
                 {item.label}
@@ -45,7 +45,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={() => void logout()}
-            className="inline-flex items-center gap-2 rounded-lg border border-ink/20 px-3 py-2 text-sm font-semibold text-ink hover:bg-ink/10"
+            className="inline-flex items-center gap-2 rounded-lg border border-ink/20 px-3 py-2 text-sm font-semibold text-ink transition hover:bg-ember/10"
           >
             <LogOut size={16} />
             Log out

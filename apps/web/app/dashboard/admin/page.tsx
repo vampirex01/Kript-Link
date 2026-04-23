@@ -56,7 +56,7 @@ export default function AdminPage() {
 
   if (isAuthLoading) {
     return (
-      <section className="rounded-2xl border border-ink/10 bg-white/85 p-5">
+      <section className="cyber-card rounded-2xl p-5">
         <h1 className="font-display text-3xl text-ink">Admin</h1>
         <p className="mt-2 text-sm text-ink/60">Loading session...</p>
       </section>
@@ -65,7 +65,7 @@ export default function AdminPage() {
 
   if (user?.role !== "OWNER") {
     return (
-      <section className="rounded-2xl border border-ink/10 bg-white/85 p-5">
+      <section className="cyber-card rounded-2xl p-5">
         <h1 className="font-display text-3xl text-ink">Admin</h1>
         <p className="mt-2 text-sm text-red-700">
           Only admin users can access this page.
@@ -85,7 +85,7 @@ export default function AdminPage() {
 
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
 
-      <section className="rounded-2xl border border-ink/10 bg-white/85 p-5">
+      <section className="cyber-card rounded-2xl p-5">
         {isLoading ? (
           <p className="text-sm text-ink/60">Loading requests...</p>
         ) : (data?.requests.length ?? 0) === 0 ? (

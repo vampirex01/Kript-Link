@@ -172,7 +172,7 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <section className="rounded-2xl border border-ink/10 bg-white/85 p-5">
+      <section className="cyber-card rounded-2xl p-5">
         <h2 className="font-display text-2xl">API keys</h2>
 
         <form
@@ -255,7 +255,7 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-ink/10 bg-white/85 p-5">
+      <section className="cyber-card rounded-2xl p-5">
         <h2 className="font-display text-2xl">Custom domains</h2>
         <form
           onSubmit={addDomain}
@@ -318,7 +318,7 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-ink/10 bg-white/85 p-5">
+      <section className="cyber-card rounded-2xl p-5">
         <h2 className="font-display text-2xl">Webhooks</h2>
         <form
           onSubmit={createWebhook}

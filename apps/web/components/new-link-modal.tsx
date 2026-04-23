@@ -108,14 +108,14 @@ export function NewLinkModal({ open, onClose, onCreated }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
-      <div className="w-full max-w-xl rounded-2xl border border-ink/20 bg-white p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070c]/70 p-4 backdrop-blur-sm">
+      <div className="cyber-card w-full max-w-xl rounded-2xl p-6 shadow-2xl">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-2xl">Create New Link</h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-sm font-semibold text-ink/60 hover:text-ink"
+            className="text-sm font-semibold text-ink/60 transition hover:text-ember"
           >
             Close
           </button>
@@ -212,7 +212,7 @@ export function NewLinkModal({ open, onClose, onCreated }: Props) {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-xl bg-ink px-4 py-3 font-semibold text-white hover:bg-ink/90"
+            className="w-full rounded-xl bg-ink px-4 py-3 font-semibold text-ink transition duration-200 hover:shadow-[0_0_24px_rgba(0,245,255,0.4)]"
           >
             {isSubmitting ? "Creating..." : "Create Link"}
           </button>

@@ -9,11 +9,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        base: "#f7f4ee",
-        ink: "#202021",
-        ember: "#e85d2a",
-        moss: "#375b46",
-        sand: "#d7c8aa",
+        base: "#0B0E14",
+        ink: "#0B0E14",
+        ember: "#00F5FF",
+        moss: "#48E8A8",
+        sand: "#94A3B8",
       },
       fontFamily: {
         display: ['"Space Grotesk"', "sans-serif"],

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ShortURL Dashboard",
-  description: "Manage short links, analytics, and domains",
+  title: "Krypt Link",
+  description: "Secure short links, real-time analytics, and custom domains",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="grid-overlay">{children}</body>
     </html>
   );
 }

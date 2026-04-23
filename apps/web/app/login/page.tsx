@@ -43,7 +43,7 @@ export default function LoginPage() {
     <main className="page-enter mx-auto flex min-h-screen w-full max-w-md items-center px-6 py-16">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="w-full rounded-2xl border border-ink/10 bg-white/80 p-7 shadow-xl backdrop-blur"
+        className="cyber-card w-full rounded-2xl p-7 backdrop-blur"
       >
         <h1 className="font-display text-3xl text-ink">Sign in</h1>
         <p className="mt-1 text-sm text-ink/60">
@@ -85,7 +85,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-6 w-full rounded-xl bg-ink px-4 py-3 font-semibold text-white transition hover:bg-ink/90 disabled:opacity-60"
+          className="mt-6 w-full rounded-xl bg-ink px-4 py-3 font-semibold text-ink transition duration-200 hover:shadow-[0_0_22px_rgba(0,245,255,0.35)] disabled:opacity-60"
         >
           {isSubmitting ? "Signing in..." : "Sign in"}
         </button>

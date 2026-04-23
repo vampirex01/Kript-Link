@@ -5,18 +5,35 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
+  --cyber-bg: #0b0e14;
+  --cyber-surface: #1a1f26;
+  --cyber-surface-2: #202733;
+  --cyber-accent: #00f5ff;
+  --cyber-text: #ffffff;
+  --cyber-muted: #94a3b8;
+  --cyber-border: rgba(148, 163, 184, 0.28);
+  --cyber-success: #48e8a8;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 15% 10%, rgba(232, 93, 42, 0.2), transparent 30%),
-    radial-gradient(circle at 85% 20%, rgba(55, 91, 70, 0.2), transparent 25%),
-    linear-gradient(180deg, #f8f5ef 0%, #efe8da 100%);
-  color: #202021;
+    radial-gradient(
+      circle at 12% 10%,
+      rgba(0, 245, 255, 0.16),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 88% 14%,
+      rgba(0, 245, 255, 0.09),
+      transparent 26%
+    ),
+    linear-gradient(180deg, #0b0e14 0%, #0f131d 48%, #0b0e14 100%);
+  color: var(--cyber-text);
   font-family: "Plus Jakarta Sans", sans-serif;
+  overflow-x: hidden;
 }
 
 * {
@@ -31,10 +48,168 @@ a {
   animation: pageIn 400ms ease-out;
 }
 
+@layer base {
+  .text-ink {
+    color: var(--cyber-text) !important;
+  }
+
+  .text-ink\/70 {
+    color: rgba(226, 237, 255, 0.78) !important;
+  }
+
+  .text-ink\/60,
+  .text-ink\/50 {
+    color: var(--cyber-muted) !important;
+  }
+
+  .bg-white,
+  .bg-white\/70,
+  .bg-white\/80,
+  .bg-white\/85 {
+    background: linear-gradient(
+      170deg,
+      rgba(26, 31, 38, 0.88) 0%,
+      rgba(32, 39, 51, 0.84) 100%
+    ) !important;
+  }
+
+  .border-ink\/10,
+  .border-ink\/20 {
+    border-color: var(--cyber-border) !important;
+  }
+
+  .bg-ink {
+    background: linear-gradient(
+      130deg,
+      #00d7e0 0%,
+      var(--cyber-accent) 100%
+    ) !important;
+    color: #0b0e14 !important;
+  }
+
+  .hover\:bg-ink\/90:hover {
+    background: linear-gradient(130deg, #00f5ff 0%, #85fdff 100%) !important;
+  }
+
+  .text-ember {
+    color: var(--cyber-accent) !important;
+  }
+
+  .bg-ember,
+  .hover\:bg-ember\/90:hover {
+    background: linear-gradient(120deg, #00c8d1 0%, #00f5ff 100%) !important;
+    color: #0b0e14 !important;
+  }
+
+  .bg-ember\/10 {
+    background: rgba(0, 245, 255, 0.14) !important;
+  }
+
+  .text-moss {
+    color: var(--cyber-success) !important;
+  }
+
+  .bg-moss\/10 {
+    background: rgba(72, 232, 168, 0.14) !important;
+  }
+
+  input,
+  textarea,
+  select {
+    color: var(--cyber-text);
+    border-color: var(--cyber-border);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: rgba(148, 163, 184, 0.78);
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: rgba(0, 245, 255, 0.7) !important;
+    box-shadow: 0 0 0 3px rgba(0, 245, 255, 0.14);
+    outline: none;
+  }
+}
+
+@layer components {
+  .cyber-card {
+    border: 1px solid var(--cyber-border);
+    background: linear-gradient(
+      165deg,
+      rgba(26, 31, 38, 0.9) 0%,
+      rgba(24, 33, 45, 0.82) 100%
+    );
+    box-shadow:
+      0 18px 40px rgba(0, 0, 0, 0.42),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    transition:
+      transform 220ms ease,
+      border-color 220ms ease,
+      box-shadow 220ms ease;
+  }
+
+  .cyber-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(0, 245, 255, 0.38);
+    box-shadow:
+      0 20px 52px rgba(0, 0, 0, 0.52),
+      0 0 28px rgba(0, 245, 255, 0.12);
+  }
+
+  .hud-pill {
+    border: 1px solid rgba(0, 245, 255, 0.34);
+    background: rgba(0, 245, 255, 0.12);
+    color: var(--cyber-accent);
+  }
+}
+
+.grid-overlay::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at center, black 45%, transparent 92%);
+  z-index: -1;
+}
+
+.stagger-in > * {
+  animation: revealUp 460ms ease both;
+}
+
+.stagger-in > *:nth-child(2) {
+  animation-delay: 80ms;
+}
+
+.stagger-in > *:nth-child(3) {
+  animation-delay: 160ms;
+}
+
+.stagger-in > *:nth-child(4) {
+  animation-delay: 240ms;
+}
+
 @keyframes pageIn {
   from {
     opacity: 0;
     transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes revealUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
   to {
     opacity: 1;

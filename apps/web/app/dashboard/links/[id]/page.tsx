@@ -157,10 +157,7 @@ export default function EditLinkPage() {
         </p>
       </div>
 
-      <form
-        onSubmit={onSave}
-        className="grid gap-5 rounded-2xl border border-ink/10 bg-white/85 p-5"
-      >
+      <form onSubmit={onSave} className="cyber-card grid gap-5 rounded-2xl p-5">
         <div>
           <label className="text-sm font-medium">Title</label>
           <input
@@ -177,7 +174,9 @@ export default function EditLinkPage() {
             defaultValue={data.link.slug}
             className="mt-1 w-full rounded-xl border border-ink/20 px-3 py-2"
           />
-          <p className="mt-1 text-xs text-ink/60">Current URL: {data.link.shortUrl}</p>
+          <p className="mt-1 text-xs text-ink/60">
+            Current URL: {data.link.shortUrl}
+          </p>
         </div>
 
         <div>
@@ -268,7 +267,7 @@ export default function EditLinkPage() {
         ) : null}
       </form>
 
-      <section className="rounded-2xl border border-ink/10 bg-white/85 p-5">
+      <section className="cyber-card rounded-2xl p-5">
         <h2 className="font-display text-2xl">Geo rules</h2>
         <p className="text-sm text-ink/60">
           Define destination overrides by country, device, and language.

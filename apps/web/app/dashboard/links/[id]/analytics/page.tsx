@@ -130,27 +130,27 @@ export default function LinkAnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <article className="rounded-2xl border border-ink/10 bg-white/85 p-4">
+        <article className="cyber-card rounded-2xl p-4">
           <p className="text-xs uppercase text-ink/60">Total clicks</p>
           <p className="font-display text-3xl">{summary?.totalClicks ?? 0}</p>
         </article>
-        <article className="rounded-2xl border border-ink/10 bg-white/85 p-4">
+        <article className="cyber-card rounded-2xl p-4">
           <p className="text-xs uppercase text-ink/60">Unique</p>
           <p className="font-display text-3xl">{summary?.uniqueClicks ?? 0}</p>
         </article>
-        <article className="rounded-2xl border border-ink/10 bg-white/85 p-4">
+        <article className="cyber-card rounded-2xl p-4">
           <p className="text-xs uppercase text-ink/60">In period</p>
           <p className="font-display text-3xl">
             {summary?.clicksInPeriod ?? 0}
           </p>
         </article>
-        <article className="rounded-2xl border border-ink/10 bg-white/85 p-4">
+        <article className="cyber-card rounded-2xl p-4">
           <p className="text-xs uppercase text-ink/60">Top country</p>
           <p className="font-display text-3xl">{summary?.topCountry ?? "-"}</p>
         </article>
       </div>
 
-      <section className="rounded-2xl border border-ink/10 bg-white/85 p-5">
+      <section className="cyber-card rounded-2xl p-5">
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <select
             value={period}
@@ -193,7 +193,7 @@ export default function LinkAnalyticsPage() {
       </section>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl border border-ink/10 bg-white/85 p-5">
+        <section className="cyber-card rounded-2xl p-5">
           <h2 className="font-display text-xl">Top countries</h2>
           <div className="mt-3 h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -208,7 +208,7 @@ export default function LinkAnalyticsPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-ink/10 bg-white/85 p-5">
+        <section className="cyber-card rounded-2xl p-5">
           <h2 className="font-display text-xl">Traffic sources</h2>
           <div className="mt-3 grid grid-cols-1 gap-3 xl:grid-cols-2">
             <div className="rounded-xl border border-ink/10 p-3">
@@ -267,7 +267,7 @@ export default function LinkAnalyticsPage() {
         </section>
       </div>
 
-      <section className="rounded-2xl border border-ink/10 bg-white/85 p-5">
+      <section className="cyber-card rounded-2xl p-5">
         <h2 className="font-display text-xl">Device breakdown</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {(devices?.deviceType ?? []).map((item) => (
