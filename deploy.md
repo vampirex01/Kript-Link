@@ -1,35 +1,32 @@
-# ShortURL Deployment Guide (Ubuntu VPS + Docker)
+# Kript Link Deployment Guide (Ubuntu VPS + Docker)
 
-This guide is fully rewritten as a practical runbook. Follow it top to bottom.
+This runbook matches the current codebase and container setup.
 
-## What You Are Deploying
+## Architecture
 
-- Web app (Next.js)
-- API (Fastify)
-- Worker (click analytics queue consumer)
-- PostgreSQL
-- Redis
-- Caddy reverse proxy with automatic HTTPS
+Services deployed by docker-compose.vps.yml:
 
-Traffic flow:
+- web: Next.js app
+- api: Fastify API
+- worker: click analytics worker
+- postgres: PostgreSQL 16
+- redis: Redis 7
+- caddy: reverse proxy + automatic HTTPS
 
-- app.yourdomain.com -> web container
-- api.yourdomain.com -> api container
-- short.yourdomain.com -> api container (redirect-only public short links)
+Traffic routing:
 
-## Prerequisites
+- app.yourdomain.com -> web:3000
+- api.yourdomain.com -> api:3001
+- short.yourdomain.com -> api:3001
 
-- Ubuntu VPS with public IP
-- Docker installed
-- Docker Compose plugin installed
-- DNS A records created:
-  - app.yourdomain.com -> VPS IP
-  - api.yourdomain.com -> VPS IP
-  - short.yourdomain.com -> VPS IP
+Why short domain matters:
 
-## 1) Prepare the Server
+- Public short links should use BASE_URL on short.yourdomain.com
+- API remains on api.yourdomain.com and is not exposed in generated short links
 
-Run on VPS:
+## 1) VPS Prerequisites
+
+Run on your VPS:
 
 sudo apt update
 sudo apt install -y git curl ufw
@@ -38,6 +35,8 @@ sudo ufw allow 80
 sudo ufw allow 443
 sudo ufw --force enable
 
+Install Docker if needed, then verify:
+
 docker --version
 docker compose version
 
@@ -45,26 +44,39 @@ If compose plugin is missing:
 
 sudo apt install -y docker-compose-plugin
 
-## 2) Clone the Project
+## 2) DNS Setup
 
-Choose one directory and keep it consistent:
+Create A records pointing to the VPS public IP:
+
+- app.yourdomain.com
+- api.yourdomain.com
+- short.yourdomain.com
+
+Verify before deploy:
+
+dig +short app.yourdomain.com
+dig +short api.yourdomain.com
+dig +short short.yourdomain.com
+
+All should return your VPS IP.
+
+## 3) Clone Project
+
+Example path:
 
 cd /opt
-sudo git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git shorturl
-sudo chown -R $USER:$USER /opt/shorturl
-cd /opt/shorturl
+sudo git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git Kript-Link
+sudo chown -R $USER:$USER /opt/Kript-Link
+cd /opt/Kript-Link
 
-## 3) Create Production Environment File
+## 4) Configure .env.vps
 
-Copy template:
+Create env file from template:
 
 cp .env.vps.example .env.vps
-
-Edit:
-
 nano .env.vps
 
-Set these required values:
+Required variables:
 
 - POSTGRES_PASSWORD
 - DATABASE_URL
@@ -77,13 +89,17 @@ Set these required values:
 - APP_DOMAIN
 - API_DOMAIN
 - SHORT_DOMAIN
+- NODE_ENV
 
-Optional auto-admin values:
+Optional variables:
 
+- IPINFO_TOKEN
+- GOOGLE_SAFE_BROWSING_API_KEY
+- WORKER_CONCURRENCY
 - DEFAULT_ADMIN_EMAIL
 - DEFAULT_ADMIN_PASSWORD
 
-Recommended values pattern:
+Recommended production pattern:
 
 - APP_DOMAIN=app.yourdomain.com
 - API_DOMAIN=api.yourdomain.com
@@ -93,36 +109,35 @@ Recommended values pattern:
 - NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 - DATABASE_URL=postgresql://postgres:YOUR_POSTGRES_PASSWORD@postgres:5432/shorturl
 - REDIS_URL=redis://redis:6379
+- NODE_ENV=production
 
-Generate strong JWT secrets:
+Generate secure JWT secrets:
 
 openssl rand -base64 48
 openssl rand -base64 48
 
-Paste outputs into JWT_SECRET and JWT_REFRESH_SECRET.
+Paste values into JWT_SECRET and JWT_REFRESH_SECRET.
 
-If you want the deployment to auto-create your first admin account, set:
+Validate both are at least 16 chars:
+
+grep -E '^JWT_SECRET=|^JWT_REFRESH_SECRET=' .env.vps | awk -F= '{print $1, length($2)}'
+
+## 5) Optional Auto Admin Bootstrap
+
+If you want first admin account automatically created on API start:
 
 - DEFAULT_ADMIN_EMAIL=admin@yourdomain.com
 - DEFAULT_ADMIN_PASSWORD=StrongPassword123
 
-Validate length is at least 16:
+Current behavior:
 
-grep -E '^JWT_SECRET=|^JWT_REFRESH_SECRET=' .env.vps | awk -F= '{print $1, length($2)}'
+- If account exists, it is upgraded to OWNER + APPROVED
+- If account does not exist, it is created as OWNER + APPROVED
+- Both variables must be provided together
 
-## 4) Verify DNS Before Deploy
+## 6) Build and Start Stack
 
-Run:
-
-dig +short app.yourdomain.com
-dig +short api.yourdomain.com
-dig +short short.yourdomain.com
-
-Both should return your VPS IP.
-
-## 5) Build and Start the Full Stack
-
-From project root:
+From repository root:
 
 docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --build
 
@@ -130,30 +145,19 @@ Check status:
 
 docker compose -f docker-compose.vps.yml --env-file .env.vps ps
 
-Important:
-
-- The ps command does not build anything.
-- Build errors come from the up -d --build command.
-
-## 6) First Health Check
-
 Check logs:
 
-docker compose -f docker-compose.vps.yml --env-file .env.vps logs --tail=150 api worker web caddy
+docker compose -f docker-compose.vps.yml --env-file .env.vps logs --tail=200 api worker web caddy
 
-Check API endpoint:
+## 7) Initialize Database Schema
 
-curl -I https://api.yourdomain.com/health
+Important for this repo:
 
-Open in browser:
+- There are no Prisma migration files committed
+- API startup runs migrate deploy and db push
+- If you still see missing table errors, run manual bootstrap once
 
-- https://app.yourdomain.com
-- https://api.yourdomain.com/health
-- https://short.yourdomain.com/exampleSlug (after creating a link)
-
-## 7) Database Schema Initialization
-
-If API logs say no migrations found, run one-time schema bootstrap:
+Manual bootstrap:
 
 docker compose -f docker-compose.vps.yml --env-file .env.vps exec api npx prisma db push
 
@@ -161,44 +165,56 @@ Optional seed:
 
 docker compose -f docker-compose.vps.yml --env-file .env.vps exec api npm run prisma:seed
 
-## 8) Functional Verification
+## 8) Health and Functional Checks
 
-Test in order:
+Health endpoint:
 
-1. Register account from web UI
+curl -I https://api.yourdomain.com/health
+
+Open in browser:
+
+- https://app.yourdomain.com
+- https://api.yourdomain.com/health
+
+Functional flow:
+
+1. Register from web
 2. Login
 3. Create a short link
-4. Open short link and confirm redirect
-5. Open analytics page and confirm click data appears
+4. Confirm generated short link uses short.yourdomain.com
+5. Open short link and confirm redirect
+6. Confirm analytics appears in dashboard
 
-If analytics are missing:
+If worker not processing clicks:
 
 docker compose -f docker-compose.vps.yml --env-file .env.vps logs --tail=200 worker
 
-## 9) Standard Update Deployment
+## 9) Deploy Updates
 
-For every new release:
+Normal update flow:
 
-cd /opt/shorturl
+cd /opt/Kript-Link
 git pull
 docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --build
 docker compose -f docker-compose.vps.yml --env-file .env.vps ps
 docker image prune -f
 
-## 10) Rollback Procedure
+One-line shortcut:
 
-If a deployment fails:
+cd /opt/Kript-Link && git pull && docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --build && docker compose -f docker-compose.vps.yml --env-file .env.vps ps
 
-cd /opt/shorturl
+## 10) Rollback
+
+cd /opt/Kript-Link
 git log --oneline -n 10
 git checkout PREVIOUS_COMMIT_HASH
 docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --build
 
-After incident:
+After rollback test:
 
 git checkout main
 
-## 11) Backup and Restore PostgreSQL
+## 11) Backup and Restore
 
 Backup:
 
@@ -208,202 +224,90 @@ Restore:
 
 cat backup_shorturl.sql | docker compose -f docker-compose.vps.yml --env-file .env.vps exec -T postgres psql -U postgres -d shorturl
 
-## 12) High-Value Troubleshooting
+## 12) Troubleshooting
 
-### A) API and Worker restart loop with env validation errors
+A) Docker build fails with package-lock.json not found
 
-Symptoms include:
+Symptom:
 
-- JWT_SECRET String must contain at least 16 characters
-- JWT_REFRESH_SECRET String must contain at least 16 characters
+- Failed on COPY package.json package-lock.json
+
+Status in current repo:
+
+- Fixed in Dockerfile.api and Dockerfile.web using package\*.json
+- Build now works with or without package-lock.json
+
+If server still shows old behavior:
+
+cd /opt/Kript-Link
+git pull
+docker compose -f docker-compose.vps.yml --env-file .env.vps build --no-cache api worker web
+
+B) API health is up but routes fail with Prisma P2021 table missing
 
 Fix:
 
-cd /opt/shorturl
-nano .env.vps
-
-Regenerate secrets:
-
-openssl rand -base64 48
-openssl rand -base64 48
-
-Restart:
-
-docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --force-recreate api worker
-
-Verify:
-
-docker compose -f docker-compose.vps.yml --env-file .env.vps logs --tail=120 api worker
-
-### B) qrcode TypeScript build error during Docker build
-
-Error example:
-
-- TS7016 Could not find declaration file for module qrcode
-
-Fix from root folder:
-
-cd /opt/shorturl
-git pull
-grep -n "@types/qrcode" apps/api/package.json
-
-If missing, hotfix:
-
-npm install -D @types/qrcode -w @shorturl/api
-
-If workspace command fails, use fallback:
-
-cd apps/api
-npm install -D @types/qrcode
-cd ../..
-
-Rebuild:
-
-docker compose -f docker-compose.vps.yml --env-file .env.vps build --no-cache api worker
-docker compose -f docker-compose.vps.yml --env-file .env.vps up -d api worker
-
-### C) Workspace command fails with no workspaces found
-
-Common causes:
-
-- Wrong workspace name case (must be @shorturl/api)
-- Not running from repository root where package.json exists
-
-Correct usage:
-
-cd /opt/shorturl
-npm install -D @types/qrcode -w @shorturl/api
-
-### D) HTTPS certificate not issued
-
-Check:
-
-- DNS points to VPS
-- Ports 80 and 443 are open
-- Caddy logs
-
-Command:
-
-docker compose -f docker-compose.vps.yml --env-file .env.vps logs --tail=200 caddy
-
-### E) API reachable internally but domain fails
-
-You probably started only api/worker. Start web and caddy too:
-
-docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --build web caddy
-
-Then test:
-
-curl -I https://api.yourdomain.com/health
-
-### F) `@prisma/client did not initialize yet` runtime crash
-
-Symptoms in logs:
-
-- `@prisma/client did not initialize yet. Please run "prisma generate"`
-- API and worker keep restarting
-- Caddy shows 502 for `api.yourdomain.com`
-
-Cause:
-
-- The API/worker image was built without Prisma runtime artifacts in final node_modules.
-
-Fix:
-
-cd /opt/shorturl
-git pull
-
-docker compose -f docker-compose.vps.yml --env-file .env.vps build --no-cache api worker
-docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --force-recreate api worker
-
-Verify:
-
-docker compose -f docker-compose.vps.yml --env-file .env.vps ps
-docker compose -f docker-compose.vps.yml --env-file .env.vps logs --tail=120 api worker
-
-Then re-check health:
-
-curl -I https://api.yourdomain.com/health
-
-### G) `P2021` table does not exist (for example `public.Link`)
-
-Symptoms:
-
-- API is up (`/health` returns 200)
-- Register or link routes fail with Prisma error code `P2021`
-- Logs show `The table public.Link does not exist in the current database`
-
-Cause:
-
-- There are no Prisma migration files in this repo, so `prisma migrate deploy` does not create tables.
-
-Fix (one-time bootstrap):
-
-cd /opt/shorturl
 docker compose -f docker-compose.vps.yml --env-file .env.vps exec api npx prisma db push
-
-Optional seed data:
-
-docker compose -f docker-compose.vps.yml --env-file .env.vps exec api npm run prisma:seed
-
-Verify tables exist:
-
-docker compose -f docker-compose.vps.yml --env-file .env.vps exec postgres psql -U postgres -d shorturl -c "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename;"
-
-Restart app services:
-
 docker compose -f docker-compose.vps.yml --env-file .env.vps restart api worker web
 
-Verify only fresh logs:
-
-docker compose -f docker-compose.vps.yml --env-file .env.vps logs --since=2m --tail=150 api worker
-
-### H) Register test with curl returns JSON body error
-
-Symptom:
-
-- API logs show: `Body is not valid JSON but content-type is set to 'application/json'`
+C) Frontend calls http://localhost:3001
 
 Cause:
 
-- Shell quoting broke the JSON payload.
-
-Use this exact command:
-
-curl -sS -X POST "https://api.yourdomain.com/api/auth/register" -H 'content-type: application/json' -d '{"email":"admin@yourdomain.com","password":"StrongPass123"}'
-
-### I) Frontend tries calling `http://localhost:3001`
-
-Symptom:
-
-- Browser network tab shows requests to `http://localhost:3001/...`
-
-Cause:
-
-- `NEXT_PUBLIC_API_URL` was not injected at web image build time, so Next.js used the localhost fallback.
+- NEXT_PUBLIC_API_URL missing at build time
 
 Fix:
 
-1. Ensure `.env.vps` contains:
-   `NEXT_PUBLIC_API_URL=https://api.yourdomain.com`
-2. Rebuild and recreate web image/container:
+1. Set NEXT_PUBLIC_API_URL=https://api.yourdomain.com in .env.vps
+2. Rebuild web image:
 
 docker compose -f docker-compose.vps.yml --env-file .env.vps build --no-cache web
 docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --force-recreate web caddy
 
-3. Hard refresh browser (Ctrl+Shift+R) and test again.
+D) HTTPS certificates not issued
 
-## 13) Daily Operations Quick Commands
+Check:
+
+- DNS records resolve to VPS
+- Ports 80 and 443 open
+- Caddy logs:
+
+docker compose -f docker-compose.vps.yml --env-file .env.vps logs --tail=200 caddy
+
+E) API/worker restart with env validation errors
+
+Typical error:
+
+- JWT secret too short
+
+Fix:
+
+- Regenerate secrets
+- Update .env.vps
+- Recreate services:
+
+docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --force-recreate api worker
+
+F) Admin panel inaccessible
+
+Check:
+
+- Logged in user role is OWNER
+- If first deployment, set DEFAULT_ADMIN_EMAIL and DEFAULT_ADMIN_PASSWORD, then recreate api:
+
+docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --force-recreate api
+
+## 13) Daily Operations Commands
 
 Status:
 
 docker compose -f docker-compose.vps.yml --env-file .env.vps ps
 
-Tail all logs:
+Tail logs:
 
 docker compose -f docker-compose.vps.yml --env-file .env.vps logs -f
 
-Restart one service:
+Restart services:
 
 docker compose -f docker-compose.vps.yml --env-file .env.vps restart api
 docker compose -f docker-compose.vps.yml --env-file .env.vps restart worker
@@ -414,10 +318,6 @@ Stop stack:
 
 docker compose -f docker-compose.vps.yml --env-file .env.vps down
 
-Dangerous full reset (deletes DB and Redis volumes):
+Dangerous full reset (deletes postgres and redis data):
 
 docker compose -f docker-compose.vps.yml --env-file .env.vps down -v
-
-## 14) One-Line Deploy Shortcut
-
-cd /opt/shorturl && git pull && docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --build && docker compose -f docker-compose.vps.yml --env-file .env.vps ps
