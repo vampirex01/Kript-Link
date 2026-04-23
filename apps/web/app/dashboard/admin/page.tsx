@@ -15,6 +15,15 @@ interface SignupRequest {
   updatedAt: string;
 }
 
+interface ActiveUser {
+  id: string;
+  email: string;
+  role: string;
+  status: "APPROVED";
+  createdAt: string;
+  updatedAt: string;
+}
+
 async function authedGet<T>(url: string): Promise<T> {
   const token = getAccessToken();
   const response = await api.get(url, {
@@ -26,17 +35,29 @@ async function authedGet<T>(url: string): Promise<T> {
 export default function AdminPage() {
   const token = getAccessToken();
   const { user, isLoading: isAuthLoading } = useAuth();
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [requestBusyId, setRequestBusyId] = useState<string | null>(null);
+  const [userBusyId, setUserBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { data, mutate, isLoading } = useSWR(
-    ["/api/admin/signup-requests", token],
-    ([url]) => authedGet<{ requests: SignupRequest[] }>(url),
+  const {
+    data: requestData,
+    mutate: mutateRequests,
+    isLoading: isLoadingRequests,
+  } = useSWR(["/api/admin/signup-requests", token], ([url]) =>
+    authedGet<{ requests: SignupRequest[] }>(url),
+  );
+
+  const {
+    data: activeUsersData,
+    mutate: mutateActiveUsers,
+    isLoading: isLoadingActiveUsers,
+  } = useSWR(["/api/admin/users", token], ([url]) =>
+    authedGet<{ users: ActiveUser[] }>(url),
   );
 
   const reviewRequest = async (id: string, action: "approve" | "reject") => {
     setError(null);
-    setBusyId(id);
+    setRequestBusyId(id);
 
     try {
       await api.patch(
@@ -46,11 +67,28 @@ export default function AdminPage() {
           headers: authHeader(token),
         },
       );
-      await mutate();
+      await Promise.all([mutateRequests(), mutateActiveUsers()]);
     } catch {
       setError("Failed to update signup request");
     } finally {
-      setBusyId(null);
+      setRequestBusyId(null);
+    }
+  };
+
+  const deleteActiveUser = async (id: string) => {
+    setError(null);
+    setUserBusyId(id);
+
+    try {
+      await api.delete(`/api/admin/users/${id}`, {
+        headers: authHeader(token),
+      });
+
+      await Promise.all([mutateActiveUsers(), mutateRequests()]);
+    } catch {
+      setError("Failed to delete user");
+    } finally {
+      setUserBusyId(null);
     }
   };
 
@@ -79,20 +117,25 @@ export default function AdminPage() {
       <div>
         <h1 className="font-display text-3xl text-ink">Signup approvals</h1>
         <p className="text-sm text-ink/60">
-          Monitor signup requests and approve or reject account access.
+          Approve pending signup requests and manage active user accounts.
         </p>
       </div>
 
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
 
       <section className="cyber-card rounded-2xl p-5">
-        {isLoading ? (
+        <h2 className="font-display text-2xl text-ink">Pending requests</h2>
+        <p className="mt-1 text-sm text-ink/60">
+          Rejecting a request permanently deletes that account.
+        </p>
+
+        {isLoadingRequests ? (
           <p className="text-sm text-ink/60">Loading requests...</p>
-        ) : (data?.requests.length ?? 0) === 0 ? (
+        ) : (requestData?.requests.length ?? 0) === 0 ? (
           <p className="text-sm text-ink/60">No signup requests yet.</p>
         ) : (
-          <div className="space-y-3">
-            {(data?.requests ?? []).map((request) => (
+          <div className="mt-4 space-y-3">
+            {(requestData?.requests ?? []).map((request) => (
               <article
                 key={request.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ink/10 p-3"
@@ -100,14 +143,13 @@ export default function AdminPage() {
                 <div>
                   <p className="font-semibold text-ink">{request.email}</p>
                   <p className="text-xs text-ink/60">
-                    Status: {request.status} | Applied:{" "}
-                    {new Date(request.createdAt).toLocaleString()}
+                    Applied: {new Date(request.createdAt).toLocaleString()}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    disabled={busyId === request.id}
+                    disabled={requestBusyId === request.id}
                     onClick={() => void reviewRequest(request.id, "approve")}
                     className="rounded-lg border border-moss px-3 py-1.5 text-sm text-moss disabled:opacity-60"
                   >
@@ -115,13 +157,52 @@ export default function AdminPage() {
                   </button>
                   <button
                     type="button"
-                    disabled={busyId === request.id}
+                    disabled={requestBusyId === request.id}
                     onClick={() => void reviewRequest(request.id, "reject")}
                     className="rounded-lg border border-red-400 px-3 py-1.5 text-sm text-red-700 disabled:opacity-60"
                   >
                     Reject
                   </button>
                 </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="cyber-card rounded-2xl p-5">
+        <h2 className="font-display text-2xl text-ink">Active users</h2>
+        <p className="mt-1 text-sm text-ink/60">
+          Approved accounts currently allowed to use the app.
+        </p>
+
+        {isLoadingActiveUsers ? (
+          <p className="text-sm text-ink/60">Loading active users...</p>
+        ) : (activeUsersData?.users.length ?? 0) === 0 ? (
+          <p className="text-sm text-ink/60">No active users found.</p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {(activeUsersData?.users ?? []).map((activeUser) => (
+              <article
+                key={activeUser.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ink/10 p-3"
+              >
+                <div>
+                  <p className="font-semibold text-ink">{activeUser.email}</p>
+                  <p className="text-xs text-ink/60">
+                    Role: {activeUser.role} | Joined:{" "}
+                    {new Date(activeUser.createdAt).toLocaleString()}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={userBusyId === activeUser.id}
+                  onClick={() => void deleteActiveUser(activeUser.id)}
+                  className="rounded-lg border border-red-400 px-3 py-1.5 text-sm text-red-700 disabled:opacity-60"
+                >
+                  Delete user
+                </button>
               </article>
             ))}
           </div>
