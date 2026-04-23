@@ -385,7 +385,7 @@ Cause:
 Fix:
 
 1. Ensure `.env.vps` contains:
-  `NEXT_PUBLIC_API_URL=https://api.yourdomain.com`
+   `NEXT_PUBLIC_API_URL=https://api.yourdomain.com`
 2. Rebuild and recreate web image/container:
 
 docker compose -f docker-compose.vps.yml --env-file .env.vps build --no-cache web
